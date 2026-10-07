@@ -15,6 +15,7 @@ stress_SOURCES = stress.c testlib.c
 stress_mt_SOURCES = stress_mt.c
 set_option_SOURCES = set_option.c testlib.c
 init_context_SOURCES = init_context.c testlib.c
+control_length_SOURCES = control_length.c testlib.c
 macos_SOURCES = macos.c testlib.c
 testcore_SOURCES = testcore.c
 
@@ -36,11 +37,11 @@ testcore_LDFLAGS += ${AM_LDFLAGS} -s PROXY_TO_PTHREAD -s EXIT_RUNTIME
 endif
 
 noinst_HEADERS = libusb_testlib.h
-noinst_PROGRAMS = stress stress_mt set_option init_context testcore
+noinst_PROGRAMS = stress stress_mt set_option init_context control_length testcore
 
 # testcore is an intentionally long-running stress test. CI sets
 # --enable-testcore on master and for explicitly labelled pull requests.
-TESTS = stress stress_mt set_option init_context
+TESTS = stress stress_mt set_option init_context control_length
 if RUN_TESTCORE
 TESTS += testcore
 endif
