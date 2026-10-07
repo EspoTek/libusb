@@ -1,0 +1,34 @@
+# Fork-only (EspoTek/libusb): build libusb + the test programs in MSYS2 and
+# upload the Windows exes so they can be run on a machine with the hardware.
+# Not meant for upstream.
+name: Test exes (fork only)
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-cc mingw-w64-x86_64-autotools
+      - name: Build
+        run: |
+          ./bootstrap.sh
+          ./.private/ci-build.sh --build-dir build-msys2
+          ls -la build-msys2/tests build-msys2/tests/.libs || true
+      - name: Collect exes
+        run: |
+          mkdir -p out
+          cp build-msys2/tests/.libs/*.exe out/ 2>/dev/null || cp build-msys2/tests/*.exe out/
+          cp build-msys2/libusb/.libs/libusb-1.0.dll out/ 2>/dev/null || true
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libusb-test-exes-${{ github.sha }}
+          path: out/
