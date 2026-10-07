@@ -1,34 +1,49 @@
-# Fork-only (EspoTek/libusb): build libusb + the test programs in MSYS2 and
-# upload the Windows exes so they can be run on a machine with the hardware.
-# Not meant for upstream.
+# Fork-only (EspoTek/libusb): build libusb + the test programs in MSYS2 for
+# x64 and Win32 and upload the exes so they can be run on a machine with the
+# hardware. Not meant for upstream.
 name: Test exes (fork only)
 on: [push, workflow_dispatch]
 
 jobs:
   build:
+    name: ${{ matrix.msystem }}
     runs-on: windows-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - msystem: MINGW32
+            packages: git mingw-w64-i686-cc mingw-w64-i686-autotools
+            arch: x86
+          - msystem: MINGW64
+            packages: git mingw-w64-x86_64-cc mingw-w64-x86_64-autotools
+            arch: x64
     defaults:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # build-aux/gen-describe.sh wants history + tags
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: ${{ matrix.msystem }}
           update: true
-          install: git mingw-w64-x86_64-cc mingw-w64-x86_64-autotools
+          install: ${{ matrix.packages }}
       - name: Build
         run: |
           ./bootstrap.sh
-          ./.private/ci-build.sh --build-dir build-msys2
-          ls -la build-msys2/tests build-msys2/tests/.libs || true
+          ./.private/ci-build.sh --build-dir build --no-asan
       - name: Collect exes
         run: |
           mkdir -p out
-          cp build-msys2/tests/.libs/*.exe out/ 2>/dev/null || cp build-msys2/tests/*.exe out/
-          cp build-msys2/libusb/.libs/libusb-1.0.dll out/ 2>/dev/null || true
+          ls -la build/tests build/tests/.libs || true
+          cp build/tests/.libs/*.exe out/ 2>/dev/null || cp build/tests/*.exe out/
+          cp build/libusb/.libs/libusb-1.0.dll out/ 2>/dev/null || true
           ls -la out
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: libusb-test-exes-${{ github.sha }}
+          name: libusb-test-exes-${{ matrix.arch }}
           path: out/
+          if-no-files-found: error
