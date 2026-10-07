@@ -45,3 +45,21 @@ LOCAL_SHARED_LIBRARIES += $(LIBUSB_MODULE)
 LOCAL_MODULE := stress
 
 include $(BUILD_EXECUTABLE)
+
+# control_length
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+  $(LIBUSB_ROOT_REL)/tests/control_length.c \
+  $(LIBUSB_ROOT_REL)/tests/testlib.c
+
+LOCAL_C_INCLUDES += \
+  $(LOCAL_PATH)/.. \
+  $(LIBUSB_ROOT_ABS)
+
+LOCAL_SHARED_LIBRARIES += $(LIBUSB_MODULE)
+
+LOCAL_MODULE := control_length
+
+include $(BUILD_EXECUTABLE)
